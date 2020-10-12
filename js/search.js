@@ -1,7 +1,7 @@
 var id = [];
 var prevKeyword;
 
-function showResult() {
+async function showResult() {
     const keywordVal = document.getElementById('search').value;
     const results = document.querySelectorAll('.result-row');
     document.querySelector('.search-result').style.display = 'block';
@@ -22,27 +22,31 @@ function showResult() {
         row.remove();
     });
 
-    $.ajax({
-        url: 'getData.php',
-        method: 'GET',
-        success: function(data) {
-            data = JSON.parse(data);
-            data.forEach(arr => {
-                for (const key of Object.keys(arr)) {
-                    if (arr[key].toUpperCase().includes(keywordVal.toUpperCase()) && !id.includes(arr.id)) {
-                        id.push(arr.id);
-                        let html = `<div class="result-row mt-1"><span class="d-none">${arr.id}</span><span>${arr.name}</span>
-                        <span>${arr.email}</span><span>${arr.qualification}</span><span>(${arr.specialty})</span>
-                        <span>${arr.startTime}-${arr.endTime}</span></div>`;
-                        document.querySelector('.search-result').insertAdjacentHTML('beforeend', html);
-                    }
-                }
-            });
+    let response = await fetch('getData.php', {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
         },
-        failure: function(data) {
-            alert('Got an error!');
-        }
+        body: JSON.stringify({ data: keywordVal })
     });
+
+    if (response.ok) {
+        let data = await response.json();
+        data.forEach(arr => {
+            for (const key of Object.keys(arr)) {
+                if (arr[key].toUpperCase().includes(keywordVal.toUpperCase()) && !id.includes(arr.id)) {
+                    id.push(arr.id);
+                    let html = `<div class="result-row mt-1"><span class="d-none">${arr.id}</span><span>${arr.name}</span>
+                    <span>${arr.email}</span><span>${arr.qualification}</span><span>(${arr.specialty})</span>
+                    <span>${arr.startTime}-${arr.endTime}</span></div>`;
+                    document.querySelector('.search-result').insertAdjacentHTML('beforeend', html);
+                }
+            }
+        });
+    } else {
+        alert("HTTP-Error: " + response.status);
+    }
+
 }
 let element = document.getElementById('search');
 ['keyup', 'keypress', 'click', 'mouseout'].forEach(event => element.addEventListener(event, showResult));

@@ -1,8 +1,13 @@
 <?php
 include('connection.php');
 
+$keyword = trim(file_get_contents("php://input"));
+$keyword = json_decode($keyword, true);
+$keyword = $keyword['data'];
+
 $doctors=array();
-$sql = "SELECT * FROM doctor";
+$sql = "SELECT * FROM doctor WHERE name LIKE '%$keyword%' OR email LIKE '%$keyword%' OR
+        qualification LIKE '%$keyword%' OR specialty LIKE '%$keyword%'";
 $result = mysqli_query($connDB,$sql);
 
 function formatTime($time){
